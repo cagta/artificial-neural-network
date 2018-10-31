@@ -1,7 +1,9 @@
 import numpy as np
+import math as mt
 
 IMAGE_COLUMN_SIZE = 7
 IMAGE_ROW_SIZE = 9
+EPOCH = 5
 
 """
     FONTS => Object that contains every font family will be recognized in this script.
@@ -92,9 +94,43 @@ def prepareInputs(fonts):
         inputList.append(drawChar(font))
     return inputList
 
+def activation(result):
+    for i in range(0, 7):
+        if(result.item(i) >= 2):
+            result.itemset(i, 1)
+        else:
+            result.itemset(i, 0)
+
 inputVectors = prepareInputs(FONTS)
+
+#63 Input   (IMAGE_COLUMN_SIZE * IMAGE_ROW_SIZE)
+#7  Output  (Characters which are going to be recognized)
+weights = np.zeros((63,7))
+expected = [
+    [1,0,0,0,0,0,0],#A
+    [0,1,0,0,0,0,0],#B
+    [0,0,1,0,0,0,0],#C
+    [0,0,0,1,0,0,0],#D
+    [0,0,0,0,1,0,0],#E
+    [0,0,0,0,0,1,0],#J
+    [0,0,0,0,0,0,1] #K
+]
+
+###     Training    ##
+for i in range(0, EPOCH):
+    for font in inputVectors:
+        for val, char in enumerate(font):
+            result = np.dot(char, weights)
+            activation(result)
+            error = np.subtract(np.array(expected[val]), result)
+            error = error.reshape((1,7))
+            char = char.reshape((63,1))
+            delta = np.dot(char, error)
+            weights = weights + delta
+
+###     Testing     ##
 for font in inputVectors:
-    for char in font:
-        printChar(char)
-        printVector(char)
-        break
+    for val, char in enumerate(font):
+        result = np.dot(char, weights)
+        activation(result)
+        print(result)
